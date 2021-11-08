@@ -47,8 +47,14 @@ cv2.createTrackbar("Sat Max","TrackBars",240,255,empty)
 cv2.createTrackbar("Val Min","TrackBars",153,255,empty)
 cv2.createTrackbar("Val Max","TrackBars",255,255,empty)
 
+
+cap = cv2.VideoCapture(0)
+cap.set(3, 1280)
+cap.set(4,720)
+
 while True:
-    img = cv2.imread(path)
+    success, img = cap.read()
+    #cv2.imshow("Video", img)
     imgHSV = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
     h_min = cv2.getTrackbarPos("Hue Min","TrackBars")
     h_max = cv2.getTrackbarPos("Hue Max", "TrackBars")

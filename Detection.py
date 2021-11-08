@@ -1,9 +1,9 @@
 from cv2 import cv2
 import numpy as np
 
-myColors = [[120, 180, 180, 225, 235, 240, "Red"],
-            [110, 175, 160, 215, 200, 220, "Blue"],
-            [25, 115, 230, 255, 240, 255, "Yellow"]]
+myColors = [[0, 10, 184, 255, 77, 253, "Red"],
+            [100, 135, 119, 237, 41, 134, "Blue"],
+            [9, 34, 184, 255, 135, 253, "Yellow"]]
 
 
 #Função pronta para exibir as imagens lado a lado fonte: https://github.com/murtazahassan/OpenCV-Python-Tutorials-and-Projects/blob/master/Basics/Joining_Multiple_Images_To_Display.py
@@ -40,17 +40,18 @@ def stackImages(scale,imgArray):
 
 #Função para pegar a posição dos contornos da imagem depois do Canny
 def getContours(img):
-    img = cv2.GaussianBlur(img, (3, 3), 1)
+    img = cv2.GaussianBlur(img, (11, 11), 1)
+    posX, posY, width, height = 0, 0, 0, 0
 
     contours, hierarchy = cv2.findContours(img,cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE ) #Algoritmo que pega os contornos externos
     for cnt in contours:
         area = cv2.contourArea(cnt)
-        if area > 9000:
+        if area > 11000:
             objectType = ""
             #cv2.drawContours(imgResult, cnt, -1, (0,0,0), 5) #-1 desenha todos os contornos
 
             perimeter = cv2.arcLength(cnt, True) #pega o perímetro do contorno
-            poligon = cv2.approxPolyDP(cnt, 0.01*perimeter, True) #Retorna os pontos que fazem parte do contorno
+            poligon = cv2.approxPolyDP(cnt, 0.02*perimeter, True) #Retorna os pontos que fazem parte do contorno
             corners = len(poligon) # Pega o número de lados estimado de acordo com os pontos do contorno
             print(corners)
             posX, posY, width, height = cv2.boundingRect(poligon) #cria um retângulo ao redor do contorno
@@ -83,21 +84,29 @@ def getColors(img):
         if x!= 0 and y!= 0:
             cv2.putText(imgResult, color[6], ((x - 60), (y - 40)),
                        cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 0, 0), 2)
+    return mask
+
+cap = cv2.VideoCapture(0)
+cap.set(3, 1280)
+cap.set(4,720)
+
+while True:
+    success, img = cap.read()
 
 
+    #img = cv2.imread("Images\Input.png") #Le a imagem do disco
+    imgResult = img.copy()
+    imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #Converte para escala de cinza
+    imgBlur = cv2.GaussianBlur(imgGray,(11,11),1) #Suaviza as bordas (reduz ruido nas fotos). Também chamado de filtro gaussiano
+    imgCanny = cv2.Canny(imgBlur, 50, 50) #Algoritmo de detecção de borda chamado Canny Edge Detection
+    #getContours(imgCanny) #Função para pegar a posição dos pontos do cntorno da imagem depois do Canny
 
-img = cv2.imread("Images\Input.png") #Le a imagem do disco
-imgResult = img.copy()
-imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #Converte para escala de cinza
-imgBlur = cv2.GaussianBlur(imgGray,(5,5),1) #Suaviza as bordas (reduz ruido nas fotos). Também chamado de filtro gaussiano
-imgCanny = cv2.Canny(imgBlur, 50, 50) #Algoritmo de detecção de borda chamado Canny Edge Detection
-#getContours(imgCanny) #Função para pegar a posição dos pontos do cntorno da imagem depois do Canny
+    mask = getColors(img)
 
-getColors(img)
+    imgStack = stackImages(0.5,([img,imgGray,imgBlur],
+                              [imgCanny, mask, imgResult]))
 
-imgStack = stackImages(0.75,([img,imgGray,imgBlur],
-                          [imgCanny, imgResult, img]))
+    cv2.imshow("Array",imgStack)
 
-cv2.imshow("Array",imgStack)
-
-cv2.waitKey(0)
+    if cv2.waitKey(1) & 0xFF == ord("q"):
+        break
