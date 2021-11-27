@@ -1,9 +1,10 @@
 from cv2 import cv2
 import numpy as np
 
-myColors = [[0, 10, 184, 255, 77, 253, "Red"],
-            [100, 135, 119, 237, 41, 134, "Blue"],
-            [9, 34, 184, 255, 135, 253, "Yellow"]]
+myColors = [[0, 10, 154, 194, 112, 182, "Red"],
+            [102, 117, 110, 184, 86, 160, "Blue"],
+            [18, 85, 136, 229, 124, 227, "Yellow"],
+            [0, 179, 0, 237, 34, 255, "Black"]]
 
 
 #Função pronta para exibir as imagens lado a lado fonte: https://github.com/murtazahassan/OpenCV-Python-Tutorials-and-Projects/blob/master/Basics/Joining_Multiple_Images_To_Display.py
@@ -46,12 +47,12 @@ def getContours(img):
     contours, hierarchy = cv2.findContours(img,cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE ) #Algoritmo que pega os contornos externos
     for cnt in contours:
         area = cv2.contourArea(cnt)
-        if area > 11000:
+        if area > 1000:
             objectType = ""
             #cv2.drawContours(imgResult, cnt, -1, (0,0,0), 5) #-1 desenha todos os contornos
 
             perimeter = cv2.arcLength(cnt, True) #pega o perímetro do contorno
-            poligon = cv2.approxPolyDP(cnt, 0.02*perimeter, True) #Retorna os pontos que fazem parte do contorno
+            poligon = cv2.approxPolyDP(cnt, 0.025*perimeter, True) #Retorna os pontos que fazem parte do contorno
             corners = len(poligon) # Pega o número de lados estimado de acordo com os pontos do contorno
             print(corners)
             posX, posY, width, height = cv2.boundingRect(poligon) #cria um retângulo ao redor do contorno
@@ -72,6 +73,8 @@ def getContours(img):
             cv2.putText(imgResult, objectType, ((posX-41), (posY - 10)),
                         cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 0, 0), 2)
     return posX, posY
+
+
 #Função para pegar as cores dos objetos
 def getColors(img):
     imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -86,9 +89,10 @@ def getColors(img):
                        cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 0, 0), 2)
     return mask
 
+
 cap = cv2.VideoCapture(0)
-cap.set(3, 1280)
-cap.set(4,720)
+cap.set(3, 718)
+cap.set(4, 1278)
 
 while True:
     success, img = cap.read()
