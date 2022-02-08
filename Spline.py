@@ -1,3 +1,5 @@
+#  https://www.analytics-link.com/post/2018/08/17/creating-and-plotting-cubic-splines-in-python
+
 import numpy as np
 
 import matplotlib.pyplot as plt

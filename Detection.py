@@ -1,10 +1,12 @@
+import array
+
 from cv2 import cv2
 import numpy as np
 
 myColors = [[0, 10, 154, 194, 112, 182, "Red"],
             [102, 117, 110, 184, 86, 160, "Blue"],
             [18, 85, 136, 229, 124, 227, "Yellow"],
-            [0, 179, 0, 237, 34, 255, "Black"]]
+            [0, 179, 0, 22, 61, 109, "Black"]]
 
 
 #Função pronta para exibir as imagens lado a lado fonte: https://github.com/murtazahassan/OpenCV-Python-Tutorials-and-Projects/blob/master/Basics/Joining_Multiple_Images_To_Display.py
@@ -44,6 +46,8 @@ def getContours(img):
     img = cv2.GaussianBlur(img, (11, 11), 1)
     posX, posY, width, height = 0, 0, 0, 0
 
+
+
     contours, hierarchy = cv2.findContours(img,cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE ) #Algoritmo que pega os contornos externos
     for cnt in contours:
         area = cv2.contourArea(cnt)
@@ -72,7 +76,43 @@ def getContours(img):
 
             cv2.putText(imgResult, objectType, ((posX-41), (posY - 10)),
                         cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 0, 0), 2)
+
+            findWay(imgResult, cnt)
+
+    cv2.rectangle(imgResult, (160, 650), (200, 700),
+                  (0, 255, 0), 2)  # Desenha um retângulo na tela
+
+    cv2.rectangle(imgResult, (1060, 15), (1110, 65),
+                  (0, 255, 0), 2)  # Desenha um retângulo na tela
+
+
     return posX, posY
+
+
+def findWay(img, contour):
+    # y = mx+b ou y-y1 = a(x-x1)
+
+    a = (45 - 675) / (1080 - 180)
+    y1 = 675
+    x1 = 180
+
+    contour = contour.reshape((-1, 1, 2))
+    cv2.polylines(imgResult, [contour], True, (255), 2)
+
+    imageResult = cv2.line(img, (180, 675), (1080, 45), (0, 0, 0), 2)
+
+    for x in range(x1, 1080):
+        y = a * (x - x1) + y1
+
+        status = cv2.pointPolygonTest(contour, (x, y), False)
+        if status >= 0:
+            cv2.circle(imgResult, (x, int(y)), 9, (0, 0, 255), -1)
+        #if status < 0:
+        #    cv2.circle(imgResult, (x, int(y)), 9, (255, 0, 0), -1)
+
+
+
+    return
 
 
 #Função para pegar as cores dos objetos
@@ -91,8 +131,8 @@ def getColors(img):
 
 
 cap = cv2.VideoCapture(0)
-cap.set(3, 718)
-cap.set(4, 1278)
+cap.set(3, 720)
+cap.set(4, 1280)
 
 while True:
     success, img = cap.read()
