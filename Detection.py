@@ -58,7 +58,7 @@ def getContours(img):
             perimeter = cv2.arcLength(cnt, True) #pega o perímetro do contorno
             poligon = cv2.approxPolyDP(cnt, 0.025*perimeter, True) #Retorna os pontos que fazem parte do contorno
             corners = len(poligon) # Pega o número de lados estimado de acordo com os pontos do contorno
-            print(corners)
+            #print(corners)
             posX, posY, width, height = cv2.boundingRect(poligon) #cria um retângulo ao redor do contorno
 
             if corners == 3:
@@ -77,7 +77,14 @@ def getContours(img):
             cv2.putText(imgResult, objectType, ((posX-41), (posY - 10)),
                         cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 0, 0), 2)
 
-            findWay(imgResult, cnt)
+            findWay(imgResult, posX, posY, width, height)
+
+
+
+    return posX, posY
+
+
+def findWay(img, posX, posY, width, height):
 
     cv2.rectangle(imgResult, (160, 650), (200, 700),
                   (0, 255, 0), 2)  # Desenha um retângulo na tela
@@ -86,32 +93,87 @@ def getContours(img):
                   (0, 255, 0), 2)  # Desenha um retângulo na tela
 
 
-    return posX, posY
+    myContour = np.array([[posX,posY], [posX + width, posY], [posX + width, posY + height], [posX, posY + height]], dtype=np.int32) #cria um contour partindo da bounding box
 
 
-def findWay(img, contour):
-    # y = mx+b ou y-y1 = a(x-x1)
+    # y = mx+b ou y-y1 = a(x-x1) #Criar a reta entre os pontos iniciais e finais
 
     a = (45 - 675) / (1080 - 180)
     y1 = 675
     x1 = 180
 
-    contour = contour.reshape((-1, 1, 2))
-    cv2.polylines(imgResult, [contour], True, (255), 2)
+    contour = myContour.reshape((-1, 1, 2))
 
-    imageResult = cv2.line(img, (180, 675), (1080, 45), (0, 0, 0), 2)
+    #cv2.polylines(imgResult, [contour], True, (255), 2) #Desenha o contorno das formas detectadas além da bounding box
+
+    cv2.line(img, (180, 675), (1080, 45), (0, 0, 0), 2) #Cria uma linha reta entra o ponto inicial e o final
+    colision = []
 
     for x in range(x1, 1080):
         y = a * (x - x1) + y1
 
-        status = cv2.pointPolygonTest(contour, (x, y), False)
+        status = cv2.pointPolygonTest(contour, (x, y), False) #Testa se algum ponto da reta está dentro do contorno da bounding box
+
         if status >= 0:
-            cv2.circle(imgResult, (x, int(y)), 9, (0, 0, 255), -1)
-        #if status < 0:
-        #    cv2.circle(imgResult, (x, int(y)), 9, (255, 0, 0), -1)
+            cv2.circle(imgResult, (x, int(y)), 5, (0, 0, 255), -1)
+            colision.append([x, int(y)]) #Se encontrou algum ponto da reta dentro do contorno adiciona no vetor
+    
+    midElement = int((len(colision)/2))
+    if midElement > 0:
+        middlePoint = colision[midElement]
+        x1 = middlePoint[0]
+        y1 = middlePoint[1]
+        a2 = -1/a
+        x2 = x1
+        status = 1
 
+        # while status >= 0:
+        #     y2 = a2 * (x2 - x1) + y1 #Traça uma reta perpendicular a reta que liga o início e o fim
+        #     cv2.circle(imgResult, (x2, int(y2)), 9, (0, 255, 0), -1)
+        #     status = cv2.pointPolygonTest(contour, (x2, int(y2)), False)
+        #     x2 += 1
+        #
+        #
+        # x2 += 10
+        # y2 = a2 * (x2 - x1) + y1
 
+        firstColisionValue = colision[0]
+        lastColisionValue = colision[len(colision)-1]
 
+        if a < 0: #se a reta é crescente
+            clearance = np.sqrt((posX + width - x1)**2 + (posY + height - y1)**2)
+
+            x = (firstColisionValue[1] - y1)/a + x1 #isolar o x na eq da reta para ver qual valor a partir da pos atual
+            x = x - clearance/2
+
+            y = a * (x - x1) + y1
+
+            firstColisionValue[0] = int(x)
+            firstColisionValue[1] = int(y)
+
+            x = (lastColisionValue[1] - y1) / a + x1  # isolar o x na eq da reta para ver qual valor a partir da pos atual
+            x = x + clearance/2
+            y = a * (x - x1) + y1
+
+            lastColisionValue[0] = int(x)
+            lastColisionValue[1] = int(y)
+
+        elif a > 0: #reta decrescente
+            firstColisionValue[0] = firstColisionValue[0] - 10
+            firstColisionValue[1] = firstColisionValue[1] - 10
+
+            lastColisionValue[0] = lastColisionValue[0] + 10
+            lastColisionValue[1] = lastColisionValue[1] + 10
+        else: #reta horizontal
+            firstColisionValue[0] = firstColisionValue[0] - 10
+
+        #imageResult = cv2.line(img, (firstColisionValue[0], firstColisionValue[1]), (x2, int(y2)), (0, 0, 0), 2)
+        #imageResult = cv2.line(img, (x2, int(y2)), (lastColisionValue[0], lastColisionValue[1]), (0, 0, 0), 2)
+        imageResult = cv2.line(img, (firstColisionValue[0], firstColisionValue[1]), (posX + width + 10, posY + height + 10), (0, 0, 0), 2)
+        imageResult = cv2.line(img, (posX + width + 10 , posY + height + 10), (lastColisionValue[0], lastColisionValue[1]), (0, 0, 0), 2)
+        #cv2.circle(imgResult, (x1, int(y1)), int(clearance), (0, 0, 255), 5)
+
+        
     return
 
 
