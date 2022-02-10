@@ -86,7 +86,7 @@ def getContours(img):
                 cv2.putText(imgResult, objectType, ((posX + 10), (posY + 10)),
                             cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 0, 0), 2, cv2.LINE_AA)
 
-      #      findWay(imgResult, posX, posY, width, height)
+                findWay(imgResult, posX, posY, width, height)
 
 
 
