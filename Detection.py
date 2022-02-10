@@ -1,4 +1,4 @@
-import array
+
 
 from cv2 import cv2
 import numpy as np
@@ -9,17 +9,17 @@ myColors = [[0, 10, 154, 194, 112, 182, "Red"],
             [0, 179, 0, 22, 61, 109, "Black"]]
 
 
-#Função pronta para exibir as imagens lado a lado fonte: https://github.com/murtazahassan/OpenCV-Python-Tutorials-and-Projects/blob/master/Basics/Joining_Multiple_Images_To_Display.py
-def stackImages(scale,imgArray):
+##Função pronta para exibir as imagens lado a lado fonte: https://github.com/murtazahassan/OpenCV-Python-Tutorials-and-Projects/blob/master/Basics/Joining_Multiple_Images_To_Display.py
+def stackImages(scale, imgArray):
     rows = len(imgArray)
     cols = len(imgArray[0])
     rowsAvailable = isinstance(imgArray[0], list)
     width = imgArray[0][0].shape[1]
     height = imgArray[0][0].shape[0]
     if rowsAvailable:
-        for x in range ( 0, rows):
+        for x in range(0, rows):
             for y in range(0, cols):
-                if imgArray[x][y].shape[:2] == imgArray[0][0].shape [:2]:
+                if imgArray[x][y].shape[:2] == imgArray[0][0].shape[:2]:
                     imgArray[x][y] = cv2.resize(imgArray[x][y], (0, 0), None, scale, scale)
                 else:
                     imgArray[x][y] = cv2.resize(imgArray[x][y], (imgArray[0][0].shape[1], imgArray[0][0].shape[0]), None, scale, scale)
@@ -123,9 +123,9 @@ def findWay(img, posX, posY, width, height):
         middlePoint = colision[midElement]
         x1 = middlePoint[0]
         y1 = middlePoint[1]
-        a2 = -1/a
-        x2 = x1
-        status = 1
+        #a2 = -1/a
+        #x2 = x1
+        #status = 1
 
         # while status >= 0:
         #     y2 = a2 * (x2 - x1) + y1 #Traça uma reta perpendicular a reta que liga o início e o fim
@@ -169,17 +169,17 @@ def findWay(img, posX, posY, width, height):
 
         #imageResult = cv2.line(img, (firstColisionValue[0], firstColisionValue[1]), (x2, int(y2)), (0, 0, 0), 2)
         #imageResult = cv2.line(img, (x2, int(y2)), (lastColisionValue[0], lastColisionValue[1]), (0, 0, 0), 2)
-        imageResult = cv2.line(img, (firstColisionValue[0], firstColisionValue[1]), (posX + width + 10, posY + height + 10), (0, 0, 0), 2)
-        imageResult = cv2.line(img, (posX + width + 10 , posY + height + 10), (lastColisionValue[0], lastColisionValue[1]), (0, 0, 0), 2)
+        cv2.line(img, (firstColisionValue[0], firstColisionValue[1]), (posX + width + 10, posY + height + 10), (0, 0, 0), 2)
+        cv2.line(img, (posX + width + 10, posY + height + 10), (lastColisionValue[0], lastColisionValue[1]), (0, 0, 0), 2)
         #cv2.circle(imgResult, (x1, int(y1)), int(clearance), (0, 0, 255), 5)
 
-        
     return
 
 
 #Função para pegar as cores dos objetos
 def getColors(img):
     imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    mask = []
     for color in myColors:
         lower = np.array([color[0],color[2],color[4]])
         upper = np.array([color[1],color[3],color[5]])
