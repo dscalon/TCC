@@ -3,13 +3,13 @@
 from cv2 import cv2
 import numpy as np
 
-myColors = [[0, 10, 154, 194, 112, 182, "Red"],
+myColors = [[0, 179, 0, 135, 0, 45, "Black"],
+            [0, 10, 154, 194, 112, 182, "Red"],
             [102, 117, 110, 184, 86, 160, "Blue"],
-            [18, 85, 136, 229, 124, 227, "Yellow"],
-            [0, 179, 0, 22, 61, 109, "Black"]]
+            [18, 85, 136, 229, 124, 227, "Yellow"]]
 
 
-##Função pronta para exibir as imagens lado a lado fonte: https://github.com/murtazahassan/OpenCV-Python-Tutorials-and-Projects/blob/master/Basics/Joining_Multiple_Images_To_Display.py
+#Função pronta para exibir as imagens lado a lado fonte: https://github.com/murtazahassan/OpenCV-Python-Tutorials-and-Projects/blob/master/Basics/Joining_Multiple_Images_To_Display.py
 def stackImages(scale, imgArray):
     rows = len(imgArray)
     cols = len(imgArray[0])
@@ -43,41 +43,50 @@ def stackImages(scale, imgArray):
 
 #Função para pegar a posição dos contornos da imagem depois do Canny
 def getContours(img):
-    img = cv2.GaussianBlur(img, (11, 11), 1)
-    posX, posY, width, height = 0, 0, 0, 0
+    imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    mask = []
+    for color in myColors:
+        lower = np.array([color[0], color[2], color[4]])
+        upper = np.array([color[1], color[3], color[5]])
+        mask = cv2.inRange(imgHSV, lower, upper)
 
+        img = cv2.GaussianBlur(mask, (11, 11), 1)
+        posX, posY, width, height = 0, 0, 0, 0
 
+        contours, hierarchy = cv2.findContours(img,cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE ) #Algoritmo que pega os contornos externos
+        for cnt in contours:
+            area = cv2.contourArea(cnt)
+            if area > 1000:
+                objectType = ""
+                #cv2.drawContours(imgResult, cnt, -1, (0,0,0), 5) #-1 desenha todos os contornos
 
-    contours, hierarchy = cv2.findContours(img,cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE ) #Algoritmo que pega os contornos externos
-    for cnt in contours:
-        area = cv2.contourArea(cnt)
-        if area > 1000:
-            objectType = ""
-            #cv2.drawContours(imgResult, cnt, -1, (0,0,0), 5) #-1 desenha todos os contornos
+                perimeter = cv2.arcLength(cnt, True) #pega o perímetro do contorno
+                polygon = cv2.approxPolyDP(cnt, 0.025*perimeter, True) #Retorna os pontos que fazem parte do contorno
+                corners = len(polygon) # Pega o número de lados estimado de acordo com os pontos do contorno
+                #print(corners)
+                posX, posY, width, height = cv2.boundingRect(polygon) #cria um retângulo ao redor do contorno
 
-            perimeter = cv2.arcLength(cnt, True) #pega o perímetro do contorno
-            poligon = cv2.approxPolyDP(cnt, 0.025*perimeter, True) #Retorna os pontos que fazem parte do contorno
-            corners = len(poligon) # Pega o número de lados estimado de acordo com os pontos do contorno
-            #print(corners)
-            posX, posY, width, height = cv2.boundingRect(poligon) #cria um retângulo ao redor do contorno
+                if posX > 0 and posY > 0:
+                    cv2.putText(imgResult, color[6], ((posX - 10), (posY - 20)),
+                                cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 0, 0), 2, cv2.LINE_AA)
 
-            if corners == 3:
-                objectType = "Triangle"
-            elif corners == 4:
-                if 0.95 <= float(width)/float(height) <= 1.05:
-                    objectType = "Square"
-                else:
-                    objectType = "Rectangle"
-            elif corners > 4:
-                objectType = "Circle"
+                if corners == 3:
+                    objectType = "Triangle"
+                elif corners == 4:
+                    if 0.95 <= float(width)/float(height) <= 1.05:
+                        objectType = "Square"
+                    else:
+                        objectType = "Rectangle"
+                elif corners > 4:
+                    objectType = "Circle"
 
-            cv2.rectangle(imgResult, (posX, posY), (posX + width, posY + height),
-                          (0, 255, 0), 2)  # Desenha um retângulo na tela
+                cv2.rectangle(imgResult, (posX, posY), (posX + width, posY + height),
+                              (0, 255, 0), 2)  # Desenha a bounding box
 
-            cv2.putText(imgResult, objectType, ((posX-41), (posY - 10)),
-                        cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 0, 0), 2)
+                cv2.putText(imgResult, objectType, ((posX + 10), (posY + 10)),
+                            cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 0, 0), 2, cv2.LINE_AA)
 
-            findWay(imgResult, posX, posY, width, height)
+      #      findWay(imgResult, posX, posY, width, height)
 
 
 
@@ -117,7 +126,7 @@ def findWay(img, posX, posY, width, height):
         if status >= 0:
             cv2.circle(imgResult, (x, int(y)), 5, (0, 0, 255), -1)
             colision.append([x, int(y)]) #Se encontrou algum ponto da reta dentro do contorno adiciona no vetor
-    
+
     midElement = int((len(colision)/2))
     if midElement > 0:
         middlePoint = colision[midElement]
@@ -186,9 +195,11 @@ def getColors(img):
         mask = cv2.inRange(imgHSV, lower, upper)
         x, y = getContours(mask)
         #cv2.imshow(color[6], mask)
-        if x!= 0 and y!= 0:
-            cv2.putText(imgResult, color[6], ((x - 60), (y - 40)),
-                       cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 0, 0), 2)
+        if x > 0 and y > 0:
+            cv2.putText(imgResult, color[6], ((x-10), (y - 20)),
+                       cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 0, 0), 2, cv2.LINE_AA)
+
+
     return mask
 
 
@@ -197,22 +208,24 @@ cap.set(3, 720)
 cap.set(4, 1280)
 
 while True:
+
     success, img = cap.read()
+    img = img[0:682, 160:1119]
 
 
-    #img = cv2.imread("Images\Input.png") #Le a imagem do disco
+    # #img = cv2.imread("Images\Input.png") #Le a imagem do disco
     imgResult = img.copy()
-    imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #Converte para escala de cinza
-    imgBlur = cv2.GaussianBlur(imgGray,(11,11),1) #Suaviza as bordas (reduz ruido nas fotos). Também chamado de filtro gaussiano
-    imgCanny = cv2.Canny(imgBlur, 50, 50) #Algoritmo de detecção de borda chamado Canny Edge Detection
-    #getContours(imgCanny) #Função para pegar a posição dos pontos do cntorno da imagem depois do Canny
+    # imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #Converte para escala de cinza
+    # imgBlur = cv2.GaussianBlur(imgGray,(11,11),1) #Suaviza as bordas (reduz ruido nas fotos). Também chamado de filtro gaussiano
+    # imgCanny = cv2.Canny(imgBlur, 50, 50) #Algoritmo de detecção de borda chamado Canny Edge Detection
+    # #getContours(imgCanny) #Função para pegar a posição dos pontos do cntorno da imagem depois do Canny
 
-    mask = getColors(img)
+    mask = getContours(img)
 
-    imgStack = stackImages(0.5,([img,imgGray,imgBlur],
-                              [imgCanny, mask, imgResult]))
+    #imgStack = stackImages(0.5,([img,imgGray,imgBlur],
+    #                          [imgCanny, mask, imgResult]))
 
-    cv2.imshow("Array",imgStack)
+    cv2.imshow("Array",imgResult)
 
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
