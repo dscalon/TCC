@@ -54,7 +54,7 @@ cv2.createTrackbar("Val Max","TrackBars",255,255,empty)
 
 while True:
     #success, img = cap.read()
-    img = cv2.imread("Images\Input2.png") #Le a imagem do disco
+    img = cv2.read()
     #cv2.imshow("Video", img)
     imgHSV = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
     h_min = cv2.getTrackbarPos("Hue Min","TrackBars")
