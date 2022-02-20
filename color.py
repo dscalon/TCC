@@ -37,7 +37,7 @@ def stackImages(scale,imgArray):
 
 
 
-path = 'Images\Input.png'
+path = 'Images\Input2.png'
 cv2.namedWindow("TrackBars")
 cv2.resizeWindow("TrackBars",640,240)
 cv2.createTrackbar("Hue Min","TrackBars",0,179,empty)
@@ -48,12 +48,13 @@ cv2.createTrackbar("Val Min","TrackBars",153,255,empty)
 cv2.createTrackbar("Val Max","TrackBars",255,255,empty)
 
 
-cap = cv2.VideoCapture(0)
-cap.set(3, 1280)
-cap.set(4,720)
+#cap = cv2.VideoCapture(0)
+#cap.set(3, 1280)
+#cap.set(4,720)
 
 while True:
-    success, img = cap.read()
+    #success, img = cap.read()
+    img = cv2.imread("Images\Input2.png") #Le a imagem do disco
     #cv2.imshow("Video", img)
     imgHSV = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
     h_min = cv2.getTrackbarPos("Hue Min","TrackBars")
