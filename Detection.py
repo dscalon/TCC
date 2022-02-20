@@ -175,6 +175,7 @@ def findColisions(img, startPoint, path, boundingBoxes):
 
                 if status >= 0:
                     cv2.circle(imgResult, (int(x), int(y)), 5, (255, 120, 255), -1)
+
     #                 colision.append([int(x), int(y)]) #Se encontrou algum ponto da reta dentro do contorno adiciona no vetor
     # #
     #                 midElement = int((len(colision)/2))
@@ -256,7 +257,7 @@ while True:
    # img = img[0:682, 160:1119]
 
 
-    img = cv2.imread("Images\Input5.png") #Le a imagem do disco
+    img = cv2.imread("Images\Input3.png") #Le a imagem do disco
     imgResult = img.copy()
     # imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #Converte para escala de cinza
     # imgBlur = cv2.GaussianBlur(imgGray,(11,11),1) #Suaviza as bordas (reduz ruido nas fotos). Também chamado de filtro gaussiano
