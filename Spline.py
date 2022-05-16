@@ -24,6 +24,6 @@ out = interpolate.splev(unew, tck)
 
 plt.plot(out[0], out[1], color='orange')
 
-plt.plot(data[0, :], data[1, :], 'ob')
+#plt.plot(data[0, :], data[1, :], 'ob')
 
 plt.show()
