@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 
 from scipy import interpolate
 
-timestamp = (0, 5, 10, 15, 30, 35, 40, 50, 55, 60)
+timestamp = (0, 5, 10)
 
-distance = (100, 90, 65, 85, 70, 30, 40, 45, 20, 0)
+distance = (100, 90, 65)
 
 plt.plot(timestamp, distance, 'o')
 
@@ -16,7 +16,7 @@ plt.show()
 
 data = np.array((timestamp, distance))
 
-tck, u = interpolate.splprep(data, s=0)
+tck, u = interpolate.splprep(data, s=0, k=2)
 
 unew = np.arange(0, 1.01, 0.01)
 
