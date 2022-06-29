@@ -218,10 +218,10 @@ def findControlPoints(box, points, params):
 
 
     # Pegar primeiro e último ponto com colisão para criar control point antes da colisão // params[0] = a (inclinação), params[1] = x e params[2] = y
-    x0 = listOfPoints[0][0] - 4
+    x0 = listOfPoints[0][0] - 5
     y0 = params[0] * (listOfPoints[0][0] - 4 - params[1]) + params[2]
 
-    xf = listOfPoints[-1][0] + 4
+    xf = listOfPoints[-1][0] + 5
     yf = params[0] * (listOfPoints[-1][0] + 4 - params[1]) + params[2]
 
 
@@ -232,58 +232,38 @@ def findControlPoints(box, points, params):
     cv2.circle(imgResult, (listOfPoints[-1][0], listOfPoints[-1][1]), 5, (255, 0, 255), -1)
 
     #Pegar o ponto do meio da box e criar uma circunferência, deixando uma área livre
-    clearance = 20
+    #clearance = 30
+    clearance = (math.sqrt((xf-x0)**2 + (yf-y0)**2)/2) + 10
     radius = box[2] - box[0] + clearance
     center = [(box[0] + box[2])/2, (box[1]+box[3])/2]
 
     angleOffset = math.atan(params[0])
 
-    theta = np.arange(math.pi/4 + angleOffset, 2*math.pi + math.pi/4 + angleOffset -math.pi/20, math.pi/2)
+    controlPoints = []
 
-    circlePoints = []
-    for angle in theta:
-        circlePoints.append([int(radius * math.cos(angle) + center[0]), int(radius * math.sin(angle) + center[1])])
-        cv2.circle(imgResult, (int(radius * math.cos(angle) + center[0]), int(radius * math.sin(angle) + center[1])), 5, (255, 0, 255), -1)
+    controlPoints.append([int(radius * math.cos(math.pi/4 + angleOffset) + center[0]), int(radius * math.sin(math.pi/4 + angleOffset) + center[1])])
+    controlPoints.append([int(radius * math.cos(3*math.pi/4 + angleOffset) + center[0]), int(radius * math.sin(3*math.pi/4 + angleOffset) + center[1])])
 
     #Pegar ponto do meio da reta que cruza a box e calcular a distância até os pontos da circunferência
 
-    middleIndex = float(len(listOfPoints)) / 2
+    cv2.circle(imgResult, (controlPoints[0]), 5,
+               (255, 0, 255), -1)
 
-    if middleIndex % 2 != 0:
-        middleElement = listOfPoints[int(middleIndex - .5)]
-    else:
-        middleElement = listOfPoints[int(middleIndex-1)]
+    cv2.circle(imgResult, (controlPoints[1]), 5,
+               (255, 0, 255), -1)
 
-    distanceMiddleVertices = []
+    distanceStartControlPoints = []
 
-    for point in circlePoints:
-        distanceMiddleVertices.append([middleElement, point, math.sqrt((middleElement[0] - point[0]) ** 2
-                                                                            + (middleElement[1] - point[1]) ** 2)])
+    for point in controlPoints:
+        distanceStartControlPoints.append([point, math.sqrt((point[1] - y0)**2 + (point[0] - x0)**2)])
 
-    def sortKey(elem):
-        return elem[2] #Dar o sort pela distância
+    def SortKey(obj):
+        return obj[1]
 
-    distanceMiddleVertices.sort(key=sortKey)
-    controlPoints = [distanceMiddleVertices[0][1], distanceMiddleVertices[1][1], distanceMiddleVertices[2][1],
-                     distanceMiddleVertices[3][1]]
+    distanceStartControlPoints.sort(key=SortKey)
 
-
-    angularCoeffs = []
-    for points in controlPoints:
-        if points[0] != controlPoints[0][0]:
-            angularCoeffs.append([points, (points[1] - controlPoints[0][1]) / (points[0] - controlPoints[0][0])])
-
-    angularCoeffs = [[x[0], x[1] - params[0]] for x in angularCoeffs]
-
-    def sortKey2(elem):
-        return elem[1] #Dar o sort pela diferença
-
-    angularCoeffs.sort(key=sortKey2)
-
-    controlPoints.insert(1,angularCoeffs[0][0])
-    print(str(angularCoeffs))
-    print(str(controlPoints))
-
+    controlPoints[0] = distanceStartControlPoints[0][0]
+    controlPoints[1] = distanceStartControlPoints[1][0]
 
     t_points = np.arange(0, 1, 0.01)
     alternativePath = np.array([[listOfPoints[0][0], listOfPoints[0][1]], [int(controlPoints[0][0]), int(controlPoints[0][1])],
@@ -291,11 +271,44 @@ def findControlPoints(box, points, params):
     test_set = Bezier.Curve(t_points, alternativePath)
 
     for interpolated in test_set:
-        cv2.circle(imgResult, (int(interpolated[0]), int(interpolated[1])), 5, (255, 0, 0), -1)
+
         status = cv2.pointPolygonTest(params[3][1], (int(interpolated[0]), int(interpolated[1])),
                                       False)  # Testa se algum ponto do caminho está dentro do contorno da bounding box
         if status > 0:
-            cv2.circle(imgResult, (int(interpolated[0]), int(interpolated[1])), 5, (45, 45, 255), -1)
+            controlPoints = []
+
+            controlPoints.append([int(radius * math.cos(5 * math.pi / 4 + angleOffset) + center[0]),
+                                  int(radius * math.sin(5 * math.pi / 4 + angleOffset) + center[1])])
+            controlPoints.append([int(radius * math.cos(7 * math.pi / 4 + angleOffset) + center[0]),
+                                  int(radius * math.sin(7 * math.pi / 4 + angleOffset) + center[1])])
+
+            cv2.circle(imgResult, (controlPoints[0]), 5,
+                       (123, 0, 12), -1)
+
+            cv2.circle(imgResult, (controlPoints[1]), 5,
+                       (123, 0, 12), -1)
+            distanceStartControlPoints = []
+
+            for point in controlPoints:
+                distanceStartControlPoints.append([point, math.sqrt((point[1] - y0) ** 2 + (point[0] - x0) ** 2)])
+
+            def SortKey(obj):
+                return obj[1]
+
+            distanceStartControlPoints.sort(key=SortKey)
+
+            controlPoints[0] = distanceStartControlPoints[0][0]
+            controlPoints[1] = distanceStartControlPoints[1][0]
+
+            t_points = np.arange(0, 1, 0.01)
+            alternativePath = np.array(
+                [[listOfPoints[0][0], listOfPoints[0][1]], [int(controlPoints[0][0]), int(controlPoints[0][1])],
+                 [int(controlPoints[1][0]), int(controlPoints[1][1])], [listOfPoints[-1][0], listOfPoints[-1][1]]])
+            test_set = Bezier.Curve(t_points, alternativePath)
+
+
+    for interpolated in test_set:
+        cv2.circle(imgResult, (int(interpolated[0]), int(interpolated[1])), 5, (255, 0, 0), -1)
 
     cv2.circle(imgResult, (int(controlPoints[0][0]), int(controlPoints[0][1])), 5, (255, 0, 0), -1)
     cv2.circle(imgResult, (int(controlPoints[1][0]), int(controlPoints[1][1])), 5, (255, 0, 0), -1)
@@ -304,100 +317,6 @@ def findControlPoints(box, points, params):
 
 
     return
-
-
-"""
-    # Pegar ponto do meio do vetor e calcular a distância até os vértices
-    # vértices -  [box[0], box[1]], [box[2], box[1]], [box[2], box[3]], [box[0], box[3]]
-
-    middleIndex = float(len(listOfPoints))/2
-
-    if middleIndex % 2 != 0:
-        middleElement = listOfPoints[int(middleIndex - .5)]
-    else:
-        middleElement = listOfPoints[int(middleIndex-1)]
-
-    vertices = [box[0], box[1]], [box[2], box[1]], [box[2], box[3]], [box[0], box[3]]
-    distanceMiddleVertices = []
-
-    for vertex in vertices:
-        distanceMiddleVertices.append([middleElement, vertex, math.sqrt((middleElement[0] - vertex[0])**2
-                                                                        + (middleElement[1] - vertex[1])**2)])
-
-    def sortKey(elem):
-        return elem[2]
-
-    distanceMiddleVertices.sort(key=sortKey)
-
-    middlePoint1, vertexPoint1, distance1 = distanceMiddleVertices[0]
-
-    if distance1 > 0:
-        angularCoef = (vertexPoint1[1] - middlePoint1[1]) / (vertexPoint1[0] - middlePoint1[0])
-
-        if (middlePoint1[1] - vertexPoint1[1]) >= 0:
-            controlPointX1 = int(vertexPoint1[0] + 20)
-        else:
-            controlPointX1 = int(vertexPoint1[0] - 20)
-
-        controlPointY1 = int(angularCoef * (controlPointX1 - middlePoint1[0]) + middlePoint1[1])
-
-        status = cv2.pointPolygonTest(params[3][1], (controlPointX1, controlPointY1),
-                                      False)
-
-        if status >= 0:
-
-            middlePoint1, vertexPoint1, distance1 = distanceMiddleVertices[1]
-            if distance1 > 0:
-                angularCoef = (vertexPoint1[1] - middlePoint1[1]) / (vertexPoint1[0] - middlePoint1[0])
-
-                if (middlePoint1[1] - vertexPoint1[1]) >= 0:
-                    controlPointX1 = int(vertexPoint1[0] + 20)
-                else:
-                    controlPointX1 = int(vertexPoint1[0] - 20)
-
-                controlPointY1 = angularCoef * (controlPointX1 - middlePoint1[0]) + middlePoint1[1]
-
-        #cv2.circle(imgResult, (int(controlPointX1), int(controlPointY1)), 5, (255, 0, 0), -1)
-        #cv2.circle(imgResult, (int(controlPointX1), int(controlPointY1)), 5, (255, 0, 0), -1)
-        #cv2.circle(imgResult, (listOfPoints[0][0], listOfPoints[0][1]), 5, (0, 255, 255), -1)
-        #cv2.circle(imgResult, (listOfPoints[-1][0], listOfPoints[-1][1]), 5, (255, 0, 255), -1)
-        t_points = np.arange(0,1, 0.01)
-        alternativePath = np.array([[listOfPoints[0][0], listOfPoints[0][1]], [int(controlPointX1), int(controlPointY1)], [listOfPoints[-1][0], listOfPoints[-1][1]]])
-        test_set = Bezier.Curve(t_points, alternativePath)
-
-        for interpolated in test_set:
-          cv2.circle(imgResult, (int(interpolated[0]), int(interpolated[1])), 2, (127, 128, 129), -1)
-        
-    middlePoint2, vertexPoint2, distance2 = distanceMiddleVertices[1]
-
-    if distance2 > 0:
-        angularCoef = (vertexPoint2[1] - middlePoint2[1]) / (vertexPoint2[0] - middlePoint2[0])
-
-        if (middlePoint2[1] - vertexPoint2[1]) >= 0:
-            controlPointX2 = int(vertexPoint2[0] + 20)
-        else:
-            controlPointX2 = int(vertexPoint2[0] - 20)
-
-        controlPointY2 = int(angularCoef * (controlPointX2 - middlePoint2[0]) + middlePoint2[1])
-
-        status = cv2.pointPolygonTest(params[3][1], (controlPointX2, controlPointY2),
-                                      False)
-
-        if status >= 0:
-
-            middlePoint2, vertexPoint2, distance2 = distanceMiddleVertices[1]
-            if distance1 > 0:
-                angularCoef = (vertexPoint2[1] - middlePoint2[1]) / (vertexPoint2[0] - middlePoint2[0])
-
-                if (middlePoint2[1] - vertexPoint2[1]) >= 0:
-                    controlPointX2 = int(vertexPoint2[0] + 20)
-                else:
-                    controlPointX2 = int(vertexPoint2[0] - 20)
-
-                controlPointY2 = angularCoef * (controlPointX2 - middlePoint2[0]) + middlePoint2[1]
-        """
-
-        #270 163 351 206 361 159
 
 
 
@@ -427,7 +346,7 @@ while True:
     # success, img = cap.read()
     # img = img[0:682, 160:1119]
 
-    img = cv2.imread("Images\Input3.png")  # Le a imagem do disco
+    img = cv2.imread("Images\Input8.png")  # Le a imagem do disco
     imgResult = img.copy()
 
     mask = getContours(img)
