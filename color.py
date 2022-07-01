@@ -37,7 +37,7 @@ def stackImages(scale,imgArray):
 
 
 
-path = 'Images\Input2.png'
+path = 'Images\Input11.png'
 cv2.namedWindow("TrackBars")
 cv2.resizeWindow("TrackBars",640,240)
 cv2.createTrackbar("Hue Min","TrackBars",0,179,empty)
@@ -54,7 +54,7 @@ cv2.createTrackbar("Val Max","TrackBars",255,255,empty)
 
 while True:
     #success, img = cap.read()
-    img = cv2.read()
+    img = cv2.imread("Images/input11.png")
     #cv2.imshow("Video", img)
     imgHSV = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
     h_min = cv2.getTrackbarPos("Hue Min","TrackBars")
