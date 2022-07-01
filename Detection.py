@@ -10,15 +10,15 @@ from Bezier import Bezier
 #             [102, 117, 110, 184, 86, 160, "Blue"],
 #             [18, 85, 136, 229, 124, 227, "Yellow"]]
 
-myColors = [[0, 179, 0, 135, 0, 45, "Black"],
-            [126, 179, 0, 255, 0, 255, "Red"],
-            [30, 130, 0, 255, 0, 255, "Blue"],
-            [20, 60, 0, 255, 0, 255, "Yellow"]]
-
 # myColors = [[0, 179, 0, 135, 0, 45, "Black"],
-#             [0, 15, 13, 255, 253, 255, "Red"],
-#             [109, 125, 239, 255, 252, 255, "Blue"],
-#             [15, 27, 252, 255, 238, 255, "Yellow"]]
+#             [126, 179, 0, 255, 0, 255, "Red"],
+#             [30, 130, 0, 255, 0, 255, "Blue"],
+#             [20, 60, 0, 255, 0, 255, "Yellow"]]
+
+myColors = [[0, 179, 0, 135, 0, 45, "Black"],
+            [0, 15, 13, 255, 253, 255, "Red"],
+            [109, 125, 239, 255, 252, 255, "Blue"],
+            [15, 27, 252, 255, 238, 255, "Yellow"]]
 
 startEndPoint = []
 
@@ -174,14 +174,38 @@ def findColisions(img, startPoint, path, boundingBoxes):
 
         a = (point[1] - startY) / (point[0] + 1 - startX)
 
+        if a > 90 or a < -90 :
+            if startY < point[1]:
+                Range = range(startY, int(point[1]))
+            else:
+                Range = range(int(point[1]), startY)
 
+            for y  in Range:
 
-        if startX < point[0]:
-            Range = range(startX, int(point[0]))
+                x = startX
+
+                for contour in contours:
+                    cv2.polylines(img, [contour[1]], True, (255),
+                                  2)  # Desenha o contorno das formas detectadas além da bounding box
+
+                    colision = []
+                    status = cv2.pointPolygonTest(contour[1], (x, y),
+                                                  False)  # Testa se algum ponto da reta está dentro do contorno da bounding box
+
+                    if status >= 0:
+                        if contoursWithColision.count(contour[0]) == 0:
+                            # cv2.circle(imgResult, (int(x), int(y)), 5, (255, 120, 255), -1)
+                            contoursWithColision.append(contour[0])
+                            params.append([a, startX, startY, contour])
+
+                        pointsWithColisions.setdefault(tuple(contour[0]), []).append([int(x), int(y)])
         else:
-            Range = range(int(point[0]), startX)
+            if startX < point[0]:
+                Range = range(startX, int(point[0]))
+            else:
+                Range = range(int(point[0]), startX)
 
-        for x in Range:
+            for x in Range:
 
                 y = a * (x - startX) + startY
 
@@ -221,23 +245,29 @@ def findControlPoints(box, points, params):
     for point in points:
         listOfPoints.append(point)
 
+    if params[0] > -90 and params[0] < 90:
 
-    # Pegar primeiro e último ponto com colisão para criar control point antes da colisão // params[0] = a (inclinação), params[1] = x e params[2] = y
-    x0 = listOfPoints[0][0] - 1
-    y0 = params[0] * (listOfPoints[0][0] - 1 - params[1]) + params[2]
+        # Pegar primeiro e último ponto com colisão para criar control point antes da colisão // params[0] = a (inclinação), params[1] = x e params[2] = y
+        x0 = listOfPoints[0][0] - 1
+        y0 = params[0] * (listOfPoints[0][0] - 1 - params[1]) + params[2]
 
-    xf = listOfPoints[-1][0] + 1
-    yf = params[0] * (listOfPoints[-1][0] + 1 - params[1]) + params[2]
+        xf = listOfPoints[-1][0] + 1
+        yf = params[0] * (listOfPoints[-1][0] + 1 - params[1]) + params[2]
 
+        listOfPoints.insert(0, [x0, int(y0)])
+        listOfPoints.append([xf, int(yf)])
 
-    listOfPoints.insert(0, [x0, int(y0)])
-    listOfPoints.append([xf, int(yf)])
+    else:
+        x0 = listOfPoints[0][0]
+        y0 = listOfPoints[0][1]
+        xf = listOfPoints[-1][0]
+        yf = listOfPoints[-1][1]
 
     cv2.circle(imgResult, (listOfPoints[0][0], listOfPoints[0][1]), 5, (45, 50, 160), -1)
     cv2.circle(imgResult, (listOfPoints[-1][0], listOfPoints[-1][1]), 5, (45, 50, 160), -1)
 
     #Pegar o ponto do meio da box e criar uma circunferência, deixando uma área livre
-    clearance = 12
+    clearance = 15
     #clearance = (math.sqrt((xf-x0)**2 + (yf-y0)**2)/2) + 10
     #radius = box[2] - box[0]# + clearance
     #center = [(box[0] + box[2])/2, (box[1]+box[3])/2]
@@ -363,7 +393,7 @@ while True:
 
     #img = img[0:682, 160:1119]
 
-    img = cv2.imread("Images\Input3.png")  # Le a imagem do disco
+    img = cv2.imread("Images\Input13.png")  # Le a imagem do disco
     imgResult = img.copy()
 
     mask = getContours(img)
