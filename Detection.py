@@ -10,15 +10,15 @@ from Bezier import Bezier
 #             [102, 117, 110, 184, 86, 160, "Blue"],
 #             [18, 85, 136, 229, 124, 227, "Yellow"]]
 
-myColors = [[0, 179, 0, 135, 0, 45, "Black"],
-            [126, 179, 0, 255, 0, 255, "Red"],
-            [30, 130, 0, 255, 0, 255, "Blue"],
-            [20, 60, 0, 255, 0, 255, "Yellow"]]
-
 # myColors = [[0, 179, 0, 135, 0, 45, "Black"],
-#             [0, 15, 13, 255, 253, 255, "Red"],
-#             [109, 125, 239, 255, 252, 255, "Blue"],
-#             [15, 27, 252, 255, 238, 255, "Yellow"]]
+#             [126, 179, 0, 255, 0, 255, "Red"],
+#             [30, 130, 0, 255, 0, 255, "Blue"],
+#             [20, 60, 0, 255, 0, 255, "Yellow"]]
+
+myColors = [[0, 179, 0, 135, 0, 45, "Black"],
+            [0, 15, 13, 255, 253, 255, "Red"],
+            [109, 125, 239, 255, 252, 255, "Blue"],
+            [15, 27, 252, 255, 238, 255, "Yellow"]]
 
 
 global startEndPoint
@@ -405,9 +405,9 @@ while True:
    #     success, img = cap.read()
    # #
    #  #img = img[0:682, 160:1119]
-   finalWay.clear()
 
-   img = cv2.imread("Images\Input8.png")  # Le a imagem do disco
+
+   img = cv2.imread("Images\Input11.png")  # Le a imagem do disco
    imgResult = img.copy()
 
    mask = getContours(img)
@@ -416,6 +416,7 @@ while True:
    #                          [imgCanny, mask, imgResult]))
 
    cv2.imshow("Array", imgResult)
+   finalWay.clear()
    time.sleep(3)
    if cv2.waitKey(1) & 0xFF == ord("q"):
     break
