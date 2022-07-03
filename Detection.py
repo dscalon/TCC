@@ -10,17 +10,23 @@ from Bezier import Bezier
 #             [102, 117, 110, 184, 86, 160, "Blue"],
 #             [18, 85, 136, 229, 124, 227, "Yellow"]]
 
-# myColors = [[0, 179, 0, 135, 0, 45, "Black"],
-#             [126, 179, 0, 255, 0, 255, "Red"],
-#             [30, 130, 0, 255, 0, 255, "Blue"],
-#             [20, 60, 0, 255, 0, 255, "Yellow"]]
-
 myColors = [[0, 179, 0, 135, 0, 45, "Black"],
-            [0, 15, 13, 255, 253, 255, "Red"],
-            [109, 125, 239, 255, 252, 255, "Blue"],
-            [15, 27, 252, 255, 238, 255, "Yellow"]]
+            [126, 179, 0, 255, 0, 255, "Red"],
+            [30, 130, 0, 255, 0, 255, "Blue"],
+            [20, 60, 0, 255, 0, 255, "Yellow"]]
 
+# myColors = [[0, 179, 0, 135, 0, 45, "Black"],
+#             [0, 15, 13, 255, 253, 255, "Red"],
+#             [109, 125, 239, 255, 252, 255, "Blue"],
+#             [15, 27, 252, 255, 238, 255, "Yellow"]]
+
+
+global startEndPoint
 startEndPoint = []
+global finalWay
+finalWay = []
+
+
 
 # Função pronta para exibir as imagens lado a lado fonte: https://github.com/murtazahassan/OpenCV-Python-Tutorials-and-Projects/blob/master/Basics/Joining_Multiple_Images_To_Display.py
 def stackImages(scale, imgArray):
@@ -58,7 +64,6 @@ def stackImages(scale, imgArray):
 
 # Função para pegar a posição dos contornos da imagem depois do Canny
 def getContours(img):
-    global startEndPoint
     posX, posY, width, height = 0, 0, 0, 0
     imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     startEndPoint = []
@@ -170,6 +175,7 @@ def findColisions(img, startPoint, path, boundingBoxes):
         contours.append([box, contour])
 
     for point in path:
+
         # y = mx+b ou y-y1 = a(x-x1) #Criar a reta entre os pontos iniciais e finais
 
         a = (point[1] - startY) / (point[0] + 1 - startX)
@@ -180,10 +186,10 @@ def findColisions(img, startPoint, path, boundingBoxes):
             else:
                 Range = range(int(point[1]), startY)
 
-            for y  in Range:
+            for y in Range:
 
                 x = startX
-
+                finalWay.append([int(x), int(y)])
                 for contour in contours:
                     cv2.polylines(img, [contour[1]], True, (255),
                                   2)  # Desenha o contorno das formas detectadas além da bounding box
@@ -193,12 +199,14 @@ def findColisions(img, startPoint, path, boundingBoxes):
                                                   False)  # Testa se algum ponto da reta está dentro do contorno da bounding box
 
                     if status >= 0:
+                        finalWay.pop(-1)
                         if contoursWithColision.count(contour[0]) == 0:
                             # cv2.circle(imgResult, (int(x), int(y)), 5, (255, 120, 255), -1)
                             contoursWithColision.append(contour[0])
                             params.append([a, startX, startY, contour])
 
                         pointsWithColisions.setdefault(tuple(contour[0]), []).append([int(x), int(y)])
+
         else:
             if startX < point[0]:
                 Range = range(startX, int(point[0]))
@@ -206,9 +214,9 @@ def findColisions(img, startPoint, path, boundingBoxes):
                 Range = range(int(point[0]), startX)
 
             for x in Range:
-
+                status = 0
                 y = a * (x - startX) + startY
-
+                finalWay.append([int(x), int(y)])
                 for contour in contours:
                     cv2.polylines(img, [contour[1]], True, (255),
                               2)  # Desenha o contorno das formas detectadas além da bounding box
@@ -218,6 +226,7 @@ def findColisions(img, startPoint, path, boundingBoxes):
                                               False)  # Testa se algum ponto da reta está dentro do contorno da bounding box
 
                     if status >= 0:
+                        finalWay.pop(-1)
                         if contoursWithColision.count(contour[0]) == 0:
                        # cv2.circle(imgResult, (int(x), int(y)), 5, (255, 120, 255), -1)
                             contoursWithColision.append(contour[0])
@@ -225,14 +234,13 @@ def findColisions(img, startPoint, path, boundingBoxes):
 
                         pointsWithColisions.setdefault(tuple(contour[0]), []).append([int(x), int(y)])
 
-
-
         startX = int(point[0])
         startY = int(point[1])
         counter = 0
 
     for key in pointsWithColisions.keys():
         findControlPoints(key, pointsWithColisions[key], params[counter])
+
         counter = counter + 1
 
     return
@@ -240,10 +248,11 @@ def findColisions(img, startPoint, path, boundingBoxes):
 
 def findControlPoints(box, points, params):
 
-
     listOfPoints = []
+
     for point in points:
         listOfPoints.append(point)
+
 
     if params[0] > -90 and params[0] < 90:
 
@@ -262,6 +271,7 @@ def findControlPoints(box, points, params):
         y0 = listOfPoints[0][1]
         xf = listOfPoints[-1][0]
         yf = listOfPoints[-1][1]
+
 
     cv2.circle(imgResult, (listOfPoints[0][0], listOfPoints[0][1]), 5, (45, 50, 160), -1)
     cv2.circle(imgResult, (listOfPoints[-1][0], listOfPoints[-1][1]), 5, (45, 50, 160), -1)
@@ -352,16 +362,18 @@ def findControlPoints(box, points, params):
 
     for interpolated in test_set:
         cv2.circle(imgResult, (int(interpolated[0]), int(interpolated[1])), 2, (255, 0, 0), -1)
+        finalWay.append([int(interpolated[0]), int(interpolated[1])])
+
+    for way in finalWay:
+        cv2.circle(imgResult, (way[0], way[1]), 3, (255, 255, 135), -1)
+
 
     cv2.circle(imgResult, (int(controlPoints[0][0]), int(controlPoints[0][1])), 5, (45, 50, 160), -1)
     cv2.circle(imgResult, (int(controlPoints[1][0]), int(controlPoints[1][1])), 5, (45, 50, 160), -1)
     cv2.circle(imgResult, (listOfPoints[0][0], listOfPoints[0][1]), 5, (0, 255, 255), -1)
     cv2.circle(imgResult, (listOfPoints[-1][0], listOfPoints[-1][1]), 5, (255, 0, 255), -1)
 
-
     return
-
-
 
 # Função para pegar as cores dos objetos
 def getColors(img):
@@ -380,28 +392,30 @@ def getColors(img):
     return mask
 
 
-#cap = cv2.VideoCapture("Images\Input10.gif")
+
+#cap = cv2.VideoCapture("Images\Input15.gif")
 # cap.set(3, 720)
 # cap.set(4, 1280)
 
 while True:
+   #
+   # success, img = cap.read()
+   # if success == False:
+   #     cap = cv2.VideoCapture("Images\Input15.gif")
+   #     success, img = cap.read()
+   # #
+   #  #img = img[0:682, 160:1119]
+   finalWay.clear()
 
- #   success, img = cap.read()
- #   if success == False:
- #       cap = cv2.VideoCapture("Images\Input10.gif")
- #       success, img = cap.read()
+   img = cv2.imread("Images\Input8.png")  # Le a imagem do disco
+   imgResult = img.copy()
 
-    #img = img[0:682, 160:1119]
+   mask = getContours(img)
 
-    img = cv2.imread("Images\Input13.png")  # Le a imagem do disco
-    imgResult = img.copy()
+   # imgStack = stackImages(0.5,([img,imgGray,imgBlur],
+   #                          [imgCanny, mask, imgResult]))
 
-    mask = getContours(img)
-
-    # imgStack = stackImages(0.5,([img,imgGray,imgBlur],
-    #                          [imgCanny, mask, imgResult]))
-
-    cv2.imshow("Array", imgResult)
-    #time.sleep(3)
-    if cv2.waitKey(1) & 0xFF == ord("q"):
-        break
+   cv2.imshow("Array", imgResult)
+   time.sleep(3)
+   if cv2.waitKey(1) & 0xFF == ord("q"):
+    break
