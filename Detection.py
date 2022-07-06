@@ -104,7 +104,7 @@ def getContours(img):
                 elif corners > 4:
                     objectType = "Circle"
 
-                cv2.rectangle(imgResult, (posX, posY), (posX + width, posY + height),
+                cv2.rectangle(imgResult, (posX - 10, posY- 10), (posX + width + 10, posY + height + 10),
                               (0, 255, 0), 2)  # Desenha a bounding box
 
                 # cv2.putText(imgResult, objectType, ((posX + 10), (posY + 10)),
@@ -113,7 +113,7 @@ def getContours(img):
                 if (objectType == "Square") and (color[6] == "Black"):
                     startEndPoint.append([(posX + posX + width) / 2, (posY + posY + width) / 2])
                 else:
-                    boxes.append([posX, posY, posX + width, posY + height])
+                    boxes.append([posX - 10 , posY - 10, posX + width + 10, posY + height + 10])
 
     findWay(imgResult, startEndPoint, boxes)
 
