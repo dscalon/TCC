@@ -1,24 +1,26 @@
 import math
 import time
 import numpy as np
-
-from cv2 import cv2
+import cv2
 from Bezier import Bezier
 
 # myColors = [[0, 179, 0, 135, 0, 45, "Black"],
 #             [0, 10, 154, 194, 112, 182, "Red"],
 #             [102, 117, 110, 184, 86, 160, "Blue"],
-#             [18, 85, 136, 229, 124, 227, "Yellow"]]
+#             [18, 85, 136, 229, 124, 227, "Yellow"],
+#             [10, 22, 236, 255, 238, 255, "Orange"]]
 
-# myColors = [[0, 179, 0, 135, 0, 45, "Black"],
-#             [126, 179, 0, 255, 0, 255, "Red"],
-#             [30, 130, 0, 255, 0, 255, "Blue"],
-#             [20, 60, 0, 255, 0, 255, "Yellow"]]
+#myColors = [[0, 179, 0, 135, 0, 45, "Black"],
+#            [126, 179, 0, 255, 0, 255, "Red"],
+#            [30, 130, 0, 255, 0, 255, "Blue"],
+#            [20, 60, 0, 255, 0, 255, "Yellow"],
+#            [10, 22, 236, 255, 238, 255, "Orange"]]
 
 myColors = [[0, 179, 0, 135, 0, 45, "Black"],
             [0, 15, 13, 255, 253, 255, "Red"],
             [109, 125, 239, 255, 252, 255, "Blue"],
-            [15, 27, 252, 255, 238, 255, "Yellow"]]
+            [15, 27, 252, 255, 238, 255, "Yellow"],
+            [84, 103, 180, 195, 230, 240, "Turquish Blue"]]
 
 
 global startEndPoint
@@ -104,16 +106,19 @@ def getContours(img):
                 elif corners > 4:
                     objectType = "Circle"
 
-                cv2.rectangle(imgResult, (posX - 10, posY- 10), (posX + width + 10, posY + height + 10),
+                cv2.rectangle(imgResult, (posX, posY), (posX + width, posY + height),
                               (0, 255, 0), 2)  # Desenha a bounding box
 
                 # cv2.putText(imgResult, objectType, ((posX + 10), (posY + 10)),
                 #             cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 0, 0), 2, cv2.LINE_AA)
 
-                if (objectType == "Square") and (color[6] == "Black"):
+                if (objectType == "Square") and (color[6] == "Turquish Blue"):
+                    startEndPoint.insert(0, [(posX + posX + width) / 2, (posY + posY + width) / 2])
+
+                elif (objectType == "Square") and (color[6] == "Black"):
                     startEndPoint.append([(posX + posX + width) / 2, (posY + posY + width) / 2])
                 else:
-                    boxes.append([posX - 10 , posY - 10, posX + width + 10, posY + height + 10])
+                    boxes.append([posX - 10, posY - 10, posX + width + 10, posY + height + 10])
 
     findWay(imgResult, startEndPoint, boxes)
 
@@ -121,7 +126,10 @@ def getContours(img):
 
 
 def findWay(img, startEndPoint, boundingBoxes):
+    orangeBox = []
+    orangeBox = startEndPoint.pop(0)
     startEndPoint.sort()
+    startEndPoint.insert(0, orangeBox)
     wheigts = []
     path = []
     nodes = startEndPoint.copy()
@@ -394,29 +402,30 @@ def getColors(img):
 
 
 #cap = cv2.VideoCapture("Images\Input15.gif")
-# cap.set(3, 720)
-# cap.set(4, 1280)
+#cap.set(3, 720)
+#cap.set(4, 1280)
 
 while True:
    #
-   # success, img = cap.read()
-   # if success == False:
-   #     cap = cv2.VideoCapture("Images\Input15.gif")
-   #     success, img = cap.read()
-   # #
-   #  #img = img[0:682, 160:1119]
+ #   success, img = cap.read()
+#
+#    if success == False:
+#        cap = cv2.VideoCapture("Images\Input15.gif")
+#        success, img = cap.read()
+#
+ #   img = img[0:682, 160:1119]
 
 
-   img = cv2.imread("Images\Input11.png")  # Le a imagem do disco
-   imgResult = img.copy()
+    img = cv2.imread("Images\Input11.png")  # Le a imagem do disco
+    imgResult = img.copy()
 
-   mask = getContours(img)
+    mask = getContours(img)
 
    # imgStack = stackImages(0.5,([img,imgGray,imgBlur],
    #                          [imgCanny, mask, imgResult]))
 
-   cv2.imshow("Array", imgResult)
-   finalWay.clear()
-   time.sleep(3)
-   if cv2.waitKey(1) & 0xFF == ord("q"):
-    break
+    cv2.imshow("Array", imgResult)
+    finalWay.clear()
+    time.sleep(3)
+    if cv2.waitKey(1) & 0xFF == ord("q"):
+        break
